@@ -1,54 +1,402 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Display</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canteen Display</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <style>
-body { margin:0; font-family: Arial; text-align:center; transition:0.5s; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-.ready { background:#0b6623; color:white; }
-.cooking { background:#b8860b; color:black; animation:pulse 1.5s infinite; }
-.delayed { background:#8b0000; color:white; animation:flash 1s infinite; }
-.hold { background:#111; color:white; }
+  :root {
+    --red: #CC1F1F;
+    --red-dark: #9B1515;
+    --blue: #1A3A8C;
+    --blue-mid: #1D4ED8;
+    --gold: #F5B31B;
+    --white: #FFFFFF;
+    --dark: #111111;
+    --panel: #1A1A2E;
+  }
 
-@keyframes pulse { 0%{opacity:1;}50%{opacity:0.6;}100%{opacity:1;} }
-@keyframes flash { 0%{opacity:1;}50%{opacity:0.4;}100%{opacity:1;} }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+  }
 
-#nowServing {
-  font-size:80px;
-  transition:0.5s;
-}
+  body {
+    font-family: 'Barlow Condensed', sans-serif;
+    background: var(--dark);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding: 36px 24px 24px;
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        transparent, transparent 28px,
+        rgba(255,255,255,0.018) 28px,
+        rgba(255,255,255,0.018) 56px
+      );
+    transition: background-color 0.6s;
+  }
 
-.overlay {
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:black;
-  color:white;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  font-size:70px;
-  z-index:999;
-}
+  /* ── STATE THEMES ── */
+  body.ready   { background-color: #0a0a0a; }
+  body.cooking { background-color: #1a1000; }
+  body.delayed { background-color: #1a0000; }
+  body.hold    { background-color: #080808; }
+
+  /* ── HEADER TITLE ── */
+  .title-block {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .title-main {
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(52px, 10vw, 96px);
+    text-transform: uppercase;
+    line-height: 0.85;
+    letter-spacing: -2px;
+    text-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+  }
+
+  .title-sub {
+    display: inline-block;
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(20px, 4vw, 36px);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    background: var(--blue);
+    color: var(--white);
+    padding: 5px 28px;
+    margin-top: 6px;
+    position: relative;
+  }
+  .title-sub::before, .title-sub::after {
+    content: '';
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 0; height: 0;
+    border-top: 18px solid transparent;
+    border-bottom: 18px solid transparent;
+  }
+  .title-sub::before { right: 100%; border-right: 14px solid var(--blue); }
+  .title-sub::after  { left:  100%; border-left:  14px solid var(--blue); }
+
+  /* ── NOW SERVING ── */
+  .now-serving-card {
+    width: 100%;
+    max-width: 700px;
+    background: var(--blue);
+    border-top: 5px solid var(--white);
+    border-bottom: 3px solid rgba(255,255,255,0.2);
+    padding: 16px 28px 22px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .now-serving-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .ns-label-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .ns-rule { flex: 1; height: 2px; background: var(--red); }
+
+  .ns-label {
+    font-weight: 700;
+    font-style: italic;
+    font-size: clamp(13px, 2.5vw, 18px);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--red);
+    white-space: nowrap;
+  }
+
+  .ns-team {
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(38px, 8vw, 80px);
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    line-height: 1;
+    transition: opacity 0.3s;
+  }
+
+  .ns-status {
+    display: inline-block;
+    margin-top: 10px;
+    font-weight: 700;
+    font-size: clamp(11px, 2vw, 15px);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    background: var(--gold);
+    color: var(--dark);
+    padding: 4px 14px;
+    transition: background 0.5s, color 0.5s;
+  }
+
+  /* ── UP NEXT ── */
+  .section-card {
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 14px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-bottom: none;
+    padding: 8px 20px;
+    gap: 10px;
+  }
+
+  .section-header-label {
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(11px, 2vw, 15px);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  .section-header-label.up-next { color: var(--gold); }
+  .section-header-label.later-on { color: var(--red); }
+
+  .section-header-rule { flex: 1; height: 1px; background: rgba(255,255,255,0.15); }
+
+  .section-body {
+    background: var(--blue);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 0;
+  }
+
+  .queue-row {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding: 14px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .queue-row:last-child { border-bottom: none; }
+
+  .queue-row-name {
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(22px, 4vw, 38px);
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+  }
+
+  .queue-row-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.12);
+    margin: 0 24px;
+  }
+
+  .section-empty {
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+    text-align: center;
+    padding: 20px;
+  }
+
+  /* ── FOOTER NOTE ── */
+  .footer-note {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 10px;
+    padding: 0 4px;
+  }
+
+  .footer-icon {
+    width: 38px; height: 38px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .footer-text {
+    font-weight: 700;
+    font-style: italic;
+    font-size: clamp(10px, 1.8vw, 14px);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--gold);
+    line-height: 1.4;
+  }
+
+  /* ── HOLD OVERLAY ── */
+  .hold-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s;
+  }
+  .hold-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .hold-overlay-text {
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(40px, 10vw, 100px);
+    text-transform: uppercase;
+    letter-spacing: -2px;
+    animation: hpulse 2s ease-in-out infinite;
+  }
+  @keyframes hpulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+  /* ── CINEMATIC OVERLAY ── */
+  .cinematic {
+    position: fixed;
+    inset: 0;
+    background: var(--red);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .cinematic.show { opacity: 1; }
+
+  .cin-label {
+    font-weight: 700;
+    font-size: clamp(14px, 3vw, 22px);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 12px;
+  }
+
+  .cin-team {
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(50px, 12vw, 120px);
+    text-transform: uppercase;
+    letter-spacing: -2px;
+    line-height: 0.9;
+    text-align: center;
+    text-shadow: 0 4px 0 rgba(0,0,0,0.3);
+  }
+
+  /* ── STATUS COLOURS ── */
+  .status-cooking  { background: #d4820a; color: var(--dark); }
+  .status-delayed  { background: var(--red-dark); color: var(--white); }
+  .status-hold     { background: #444; color: var(--white); }
+  .status-ready    { background: var(--gold); color: var(--dark); }
+
+  /* cooking pulse on now-serving card */
+  body.cooking .now-serving-card { animation: cardpulse 2s ease-in-out infinite; }
+  @keyframes cardpulse { 0%,100%{opacity:1;} 50%{opacity:0.75;} }
+
+  /* delayed flash border */
+  body.delayed .now-serving-card { border-top-color: var(--red); animation: borderflash 1s infinite; }
+  @keyframes borderflash { 0%,100%{border-top-color:var(--red);} 50%{border-top-color:#ff6666;} }
 </style>
 </head>
+<body id="screen" class="ready">
 
-<body id="screen">
+<!-- Cinematic flash -->
+<div class="cinematic" id="cinematic">
+  <div class="cin-label">Now Serving</div>
+  <div class="cin-team" id="cin-team">—</div>
+</div>
 
-<div id="overlay" class="overlay"></div>
+<!-- Hold overlay -->
+<div class="hold-overlay" id="holdOverlay">
+  <div class="hold-overlay-text">⏸ On Hold</div>
+</div>
 
-<h1 id="nowServing">-</h1>
+<!-- Title -->
+<div class="title-block">
+  <div class="title-main">Selection Night<br>Dinner</div>
+  <div class="title-sub">Canteen Queue</div>
+</div>
 
-<h3>Up Next</h3>
-<ul id="upNext"></ul>
+<!-- Now Serving -->
+<div class="now-serving-card">
+  <div class="ns-label-row">
+    <div class="ns-rule"></div>
+    <div class="ns-label">Now Serving</div>
+    <div class="ns-rule"></div>
+  </div>
+  <div class="ns-team" id="nowTeam">—</div>
+  <div class="ns-status status-ready" id="statusBadge">Ready</div>
+</div>
 
-<h3>Later</h3>
-<ul id="later"></ul>
+<!-- Up Next -->
+<div class="section-card" id="upNextCard">
+  <div class="section-header">
+    <div class="section-header-label up-next">Up Next</div>
+    <div class="section-header-rule"></div>
+  </div>
+  <div class="section-body" id="upNextBody">
+    <div class="section-empty">Nothing queued</div>
+  </div>
+</div>
+
+<!-- Later On -->
+<div class="section-card" id="laterCard">
+  <div class="section-header">
+    <div class="section-header-label later-on">Later On</div>
+    <div class="section-header-rule"></div>
+  </div>
+  <div class="section-body" id="laterBody">
+    <div class="section-empty">Nothing queued</div>
+  </div>
+</div>
+
+<!-- Footer note -->
+<div class="footer-note">
+  <div class="footer-icon">🕐</div>
+  <div class="footer-text">
+    If you're here outside of your allocated time, please allow<br>
+    the team with the current slot to be served first.
+  </div>
+</div>
 
 <script>
 firebase.initializeApp({
@@ -59,55 +407,85 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 const ref = db.collection("canteen").doc("queue");
-
 let lastNow = "";
 
 function cinematic(team) {
-  let el = document.getElementById("nowServing");
-  let ov = document.getElementById("overlay");
-
-  ov.innerText = "NOW SERVING\n" + team;
-  ov.style.display = "flex";
-
-  setTimeout(() => ov.style.display="none", 1500);
-
-  el.style.opacity = 0;
-  setTimeout(()=>{
-    el.innerText = team;
-    el.style.opacity = 1;
-  },300);
+  let el = document.getElementById("cinematic");
+  document.getElementById("cin-team").textContent = team;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2200);
 }
 
 function setState(status, mode) {
-  let s = document.getElementById("screen");
+  let body = document.getElementById("screen");
+  let badge = document.getElementById("statusBadge");
 
-  s.className = "";
+  body.className = "";
 
-  if (mode === "hold") return s.classList.add("hold");
-  if (status?.includes("Cooking")) return s.classList.add("cooking");
-  if (status?.includes("Waiting") || status?.includes("Delayed")) return s.classList.add("delayed");
+  if (mode === "hold") {
+    body.classList.add("hold");
+    badge.className = "ns-status status-hold";
+    badge.textContent = "On Hold";
+    document.getElementById("holdOverlay").classList.add("visible");
+    return;
+  }
 
-  s.classList.add("ready");
+  document.getElementById("holdOverlay").classList.remove("visible");
+
+  let s = status || "";
+  if (s.includes("Cooking")) {
+    body.classList.add("cooking");
+    badge.className = "ns-status status-cooking";
+    badge.textContent = "Cooking";
+  } else if (s.includes("Waiting") || s.includes("Delayed")) {
+    body.classList.add("delayed");
+    badge.className = "ns-status status-delayed";
+    badge.textContent = s;
+  } else {
+    body.classList.add("ready");
+    badge.className = "ns-status status-ready";
+    badge.textContent = s || "Ready";
+  }
 }
 
 ref.onSnapshot(doc => {
   let d = doc.data() || {};
+  let queue = d.queue || [];
 
+  // Now serving
   if (d.now && d.now !== lastNow) {
     cinematic(d.now);
+    let el = document.getElementById("nowTeam");
+    el.style.opacity = 0;
+    setTimeout(() => { el.textContent = d.now; el.style.opacity = 1; }, 300);
+  } else if (!d.now) {
+    document.getElementById("nowTeam").textContent = "—";
+  }
+  lastNow = d.now;
+
+  // Up next (first in queue)
+  let upBody = document.getElementById("upNextBody");
+  if (queue.length > 0) {
+    upBody.innerHTML = `<div class="queue-row"><span class="queue-row-name">${queue[0]}</span></div>`;
+    document.getElementById("upNextCard").style.display = "";
+  } else {
+    upBody.innerHTML = `<div class="section-empty">Nothing queued</div>`;
   }
 
-  document.getElementById("upNext").innerHTML =
-    d.queue?.length ? `<li>${d.queue[0]}</li>` : "";
-
-  document.getElementById("later").innerHTML =
-    d.queue?.slice(1).map(t=>`<li>${t}</li>`).join("");
+  // Later on (rest of queue)
+  let laterBody = document.getElementById("laterBody");
+  let laterCard = document.getElementById("laterCard");
+  if (queue.length > 1) {
+    laterBody.innerHTML = queue.slice(1).map(t =>
+      `<div class="queue-row"><span class="queue-row-name">${t}</span></div>`
+    ).join("");
+    laterCard.style.display = "";
+  } else {
+    laterCard.style.display = "none";
+  }
 
   setState(d.status, d.mode);
-
-  lastNow = d.now;
 });
 </script>
-
 </body>
 </html>
