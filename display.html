@@ -48,6 +48,24 @@
   body.delayed  { background-color: #2a0000; }
   body.hold     { background-color: #080808; }
 
+  /* ── Background pulse for non-on-time states ── */
+  body.cooking  { animation: bgpulse-cooking 2.5s ease-in-out infinite; }
+  body.waiting  { animation: bgpulse-waiting 2.5s ease-in-out infinite; }
+  body.delayed  { animation: bgpulse-delayed 1.4s ease-in-out infinite; }
+
+  @keyframes bgpulse-cooking {
+    0%,100% { background-color: #2a1800; }
+    50%     { background-color: #3d2400; }
+  }
+  @keyframes bgpulse-waiting {
+    0%,100% { background-color: #1a1a00; }
+    50%     { background-color: #2e2e00; }
+  }
+  @keyframes bgpulse-delayed {
+    0%,100% { background-color: #2a0000; }
+    50%     { background-color: #4a0000; }
+  }
+
   /* ── TITLE ── */
   .title-block { text-align: center; margin-bottom: 28px; }
   .title-main {
@@ -68,54 +86,109 @@
   .title-sub::before { right: 100%; border-right: 14px solid var(--blue); }
   .title-sub::after  { left:  100%; border-left:  14px solid var(--blue); }
 
-  /* ── NOW SERVING — white box ── */
+  /* ── NOW SERVING CARD ── */
   .now-serving-card {
     width: 100%; max-width: 700px;
-    background: var(--white);
-    border-top: 6px solid var(--red);
-    padding: 18px 28px 24px;
     margin-bottom: 18px;
-    position: relative;
+    overflow: hidden;
   }
 
-  .ns-label-row {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+  /* Red bar — larger and pulsing */
+  .ns-red-bar {
+    height: 16px;
+    background: var(--red);
+    animation: redbar-pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes redbar-pulse {
+    0%,100% { background: var(--red); box-shadow: 0 0 0 rgba(204,31,31,0); }
+    50%     { background: #ff3030; box-shadow: 0 0 24px rgba(255,48,48,0.7); }
+  }
+
+  /* White label strip */
+  .ns-label-strip {
+    background: var(--white);
+    padding: 12px 28px 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
   .ns-rule {
     flex: 1; height: 3px; background: var(--red);
-    animation: rulepulse 1.5s ease-in-out infinite;
   }
-  @keyframes rulepulse { 0%,100%{opacity:1;} 50%{opacity:0.15;} }
-
   .ns-label {
     font-weight: 700; font-style: italic;
     font-size: clamp(13px, 2.5vw, 18px); letter-spacing: 4px;
     text-transform: uppercase; color: var(--red); white-space: nowrap;
   }
 
+  /* Blue team name block */
+  .ns-team-block {
+    background: var(--blue);
+    padding: 22px 28px 26px;
+  }
   .ns-team {
     font-weight: 900; font-style: italic;
-    font-size: clamp(38px, 8vw, 80px); text-transform: uppercase;
-    letter-spacing: -1px; line-height: 1;
-    color: var(--blue);
+    font-size: clamp(56px, 12vw, 120px); text-transform: uppercase;
+    letter-spacing: -2px; line-height: 0.9;
+    color: var(--white);
     transition: opacity 0.3s;
+    display: block;
   }
 
-  /* ── STATUS BADGE — larger ── */
+  /* ── STATUS BADGE — larger, more prominent ── */
+  .ns-status-block {
+    padding: 16px 28px;
+    background: var(--blue);
+    border-top: 1px solid rgba(255,255,255,0.12);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .ns-status-dot {
+    width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+  }
+
   .ns-status {
-    display: inline-block; margin-top: 12px;
-    font-weight: 700; font-size: clamp(16px, 2.8vw, 26px);
+    font-weight: 900; font-size: clamp(20px, 3.5vw, 32px);
     letter-spacing: 3px; text-transform: uppercase;
-    padding: 8px 24px;
-    transition: background 0.5s, color 0.5s;
+    font-style: italic;
   }
-  .status-on-time   { background: #1a7a1a; color: var(--white); }
-  .status-cooking   { background: #d4820a; color: var(--white); }
-  .status-waiting   { background: #b8a000; color: var(--white); }
-  .status-delayed   { background: var(--red); color: var(--white); }
-  .status-hold      { background: #444; color: var(--white); }
 
-  /* ── SECTION CARDS — queue entries white on blue, lighter font ── */
+  /* ON TIME — animated green shimmer */
+  .status-on-time .ns-status-dot  { background: #2ecc71; animation: dot-on-time 1.8s ease-in-out infinite; }
+  .status-on-time .ns-status       { color: #2ecc71; animation: text-on-time 1.8s ease-in-out infinite; }
+  @keyframes dot-on-time {
+    0%,100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.6); }
+    50%     { box-shadow: 0 0 0 8px rgba(46,204,113,0); }
+  }
+  @keyframes text-on-time {
+    0%,100% { opacity: 1; text-shadow: 0 0 0 rgba(46,204,113,0); }
+    50%     { opacity: 0.85; text-shadow: 0 0 20px rgba(46,204,113,0.5); }
+  }
+
+  .status-cooking .ns-status-dot  { background: #f39c12; animation: dot-pulse 1s ease-in-out infinite; }
+  .status-cooking .ns-status       { color: #f39c12; }
+
+  .status-waiting .ns-status-dot  { background: #f1c40f; animation: dot-pulse 1.2s ease-in-out infinite; }
+  .status-waiting .ns-status       { color: #f1c40f; }
+
+  .status-delayed .ns-status-dot  { background: var(--red); animation: dot-pulse 0.7s ease-in-out infinite; }
+  .status-delayed .ns-status       { color: #ff5555; animation: flash-delayed 0.7s ease-in-out infinite; }
+  @keyframes flash-delayed {
+    0%,100% { opacity: 1; }
+    50%     { opacity: 0.4; }
+  }
+
+  .status-hold .ns-status-dot  { background: #888; }
+  .status-hold .ns-status       { color: #888; }
+
+  @keyframes dot-pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+    50%     { box-shadow: 0 0 0 8px rgba(255,255,255,0); }
+  }
+
+  /* ── SECTION CARDS ── */
   .section-card { width: 100%; max-width: 700px; margin-bottom: 14px; }
 
   .section-header {
@@ -142,14 +215,10 @@
   }
   .queue-row:last-child { border-bottom: none; }
 
-  /* Lighter font weight as requested */
   .queue-row-name {
-    font-weight: 400;
-    font-style: italic;
+    font-weight: 400; font-style: italic;
     font-size: clamp(22px, 4vw, 38px);
-    text-transform: uppercase;
-    letter-spacing: 0px;
-    color: var(--white);
+    text-transform: uppercase; letter-spacing: 0px; color: var(--white);
   }
 
   .section-empty {
@@ -203,12 +272,6 @@
     letter-spacing: -2px; line-height: 0.9; text-align: center;
     text-shadow: 0 4px 0 rgba(0,0,0,0.3);
   }
-
-  /* ── STATE ANIMATIONS on now-serving card ── */
-  body.cooking .now-serving-card { animation: cardpulse 2s ease-in-out infinite; }
-  @keyframes cardpulse { 0%,100%{opacity:1;} 50%{opacity:0.8;} }
-  body.delayed .now-serving-card { animation: cardflash 1s infinite; }
-  @keyframes cardflash { 0%,100%{border-top-color:var(--red);} 50%{border-top-color:#ff6060;} }
 </style>
 </head>
 <body id="screen" class="on-time">
@@ -230,15 +293,21 @@
   <div class="title-sub">Canteen Queue</div>
 </div>
 
-<!-- Now Serving — white box -->
+<!-- Now Serving card -->
 <div class="now-serving-card">
-  <div class="ns-label-row">
+  <div class="ns-red-bar"></div>
+  <div class="ns-label-strip">
     <div class="ns-rule"></div>
     <div class="ns-label">Now Serving</div>
     <div class="ns-rule"></div>
   </div>
-  <div class="ns-team" id="nowTeam">—</div>
-  <div class="ns-status status-on-time" id="statusBadge">On Time</div>
+  <div class="ns-team-block">
+    <span class="ns-team" id="nowTeam">—</span>
+  </div>
+  <div class="ns-status-block status-on-time" id="statusBlock">
+    <div class="ns-status-dot"></div>
+    <div class="ns-status" id="statusText">On Time</div>
+  </div>
 </div>
 
 <!-- Up Next -->
@@ -292,13 +361,14 @@ function cinematic(team) {
 
 function setState(status, mode) {
   let body = document.getElementById("screen");
-  let badge = document.getElementById("statusBadge");
+  let block = document.getElementById("statusBlock");
+  let text  = document.getElementById("statusText");
   body.className = "";
 
   if (mode === "hold") {
     body.classList.add("hold");
-    badge.className = "ns-status status-hold";
-    badge.textContent = "On Hold";
+    block.className = "ns-status-block status-hold";
+    text.textContent = "On Hold";
     document.getElementById("holdOverlay").classList.add("visible");
     return;
   }
@@ -308,20 +378,20 @@ function setState(status, mode) {
   let s = status || "";
   if (s.includes("Cooking")) {
     body.classList.add("cooking");
-    badge.className = "ns-status status-cooking";
-    badge.textContent = "Cooking";
+    block.className = "ns-status-block status-cooking";
+    text.textContent = "🔥 Cooking";
   } else if (s.includes("Waiting")) {
     body.classList.add("waiting");
-    badge.className = "ns-status status-waiting";
-    badge.textContent = "Waiting on Chips";
+    block.className = "ns-status-block status-waiting";
+    text.textContent = "🍟 Waiting on Chips";
   } else if (s.includes("Delayed")) {
     body.classList.add("delayed");
-    badge.className = "ns-status status-delayed";
-    badge.textContent = "Delayed";
+    block.className = "ns-status-block status-delayed";
+    text.textContent = "⚠️ Delayed";
   } else {
     body.classList.add("on-time");
-    badge.className = "ns-status status-on-time";
-    badge.textContent = "On Time";
+    block.className = "ns-status-block status-on-time";
+    text.textContent = "✅ On Time";
   }
 }
 
