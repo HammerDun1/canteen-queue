@@ -62,11 +62,18 @@ function addTeam(){
   });
 }
 
-function serve(team){
-  ref.get().then(doc=>{
-    let data=doc.data()||{};
-    let q=(data.queue||[]).filter(t=>t!==team);
-    ref.set({now:team, queue:q},{merge:true});
+function serve(index) {
+  ref.get().then(doc => {
+    let data = doc.data() || {};
+    let q = data.queue || [];
+
+    let team = q[index];        // get exact item
+    q.splice(index, 1);         // remove safely
+
+    ref.set({
+      now: team,
+      queue: q
+    }, { merge: true });
   });
 }
 
