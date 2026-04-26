@@ -126,20 +126,30 @@
   .btn-ghost.active { border-color:var(--gold); color:var(--gold); }
   .btn-group { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 
+  /* STATUS GRID — more prominent */
   .status-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .btn-status {
     font-family:'Barlow Condensed',sans-serif; font-weight:700; font-style:italic;
     font-size:14px; letter-spacing:1px; text-transform:uppercase;
     border:2px solid var(--border); background:rgba(255,255,255,0.04);
     color:rgba(255,255,255,0.55); padding:14px 12px; cursor:pointer; transition:all 0.2s; text-align:center;
+    position: relative; overflow: hidden;
   }
   .btn-status:hover { background:rgba(255,255,255,0.1); color:var(--white); }
-  .btn-status[data-status="On Time"].active-status           { border-color:#2ecc71; color:#2ecc71; background:rgba(46,204,113,0.12); animation:status-glow-green 1.8s ease-in-out infinite; }
-  .btn-status[data-status="Cooking"].active-status           { border-color:#f39c12; color:#f39c12; background:rgba(243,156,18,0.12); }
-  .btn-status[data-status="Waiting on Chips"].active-status  { border-color:#f1c40f; color:#f1c40f; background:rgba(241,196,15,0.12); }
-  .btn-status[data-status="Delayed"].active-status           { border-color:var(--red); color:#ff5555; background:rgba(204,31,31,0.15); animation:status-flash-delayed 0.8s ease-in-out infinite; }
-  @keyframes status-glow-green    { 0%,100%{box-shadow:0 0 0 0 rgba(46,204,113,0);}  50%{box-shadow:0 0 12px 2px rgba(46,204,113,0.4);} }
-  @keyframes status-flash-delayed { 0%,100%{background:rgba(204,31,31,0.15);} 50%{background:rgba(204,31,31,0.35);} }
+
+  .btn-status[data-status="On Time"].active-status       { border-color:#2ecc71; color:#2ecc71; background:rgba(46,204,113,0.12); animation: status-glow-green 1.8s ease-in-out infinite; }
+  .btn-status[data-status="Cooking"].active-status       { border-color:#f39c12; color:#f39c12; background:rgba(243,156,18,0.12); }
+  .btn-status[data-status="Waiting on Chips"].active-status { border-color:#f1c40f; color:#f1c40f; background:rgba(241,196,15,0.12); }
+  .btn-status[data-status="Delayed"].active-status       { border-color:var(--red); color:#ff5555; background:rgba(204,31,31,0.15); animation: status-flash-delayed 0.8s ease-in-out infinite; }
+
+  @keyframes status-glow-green {
+    0%,100% { box-shadow: 0 0 0 0 rgba(46,204,113,0); }
+    50%     { box-shadow: 0 0 12px 2px rgba(46,204,113,0.4); }
+  }
+  @keyframes status-flash-delayed {
+    0%,100% { background: rgba(204,31,31,0.15); }
+    50%     { background: rgba(204,31,31,0.35); }
+  }
 
   .auto-row { display:flex; gap:8px; align-items:center; }
   .auto-row input[type="number"] {
@@ -162,8 +172,11 @@
 
   /* Now Serving */
   .now-serving-block {
-    background:var(--white); border-top:5px solid var(--red);
-    padding:20px 28px 24px; margin-bottom:24px; position:relative;
+    background:var(--white);
+    border-top:5px solid var(--red);
+    padding:20px 28px 24px;
+    margin-bottom:24px;
+    position:relative;
   }
   .now-label {
     display:flex; align-items:center; gap:12px;
@@ -175,7 +188,8 @@
   @keyframes rulepulse { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
   .now-team {
     font-family:'Barlow Condensed',sans-serif; font-weight:900; font-style:italic;
-    font-size:clamp(36px,5vw,56px); text-transform:uppercase; letter-spacing:-1px; line-height:1; color:var(--blue);
+    font-size:clamp(36px,5vw,56px); text-transform:uppercase; letter-spacing:-1px;
+    line-height:1; color:var(--blue);
   }
   .status-badge {
     display:inline-block; margin-top:12px; font-family:'Barlow Condensed',sans-serif;
@@ -207,27 +221,33 @@
     letter-spacing:2px; color:rgba(255,255,255,0.25); text-transform:uppercase;
   }
   .queue-list { list-style:none; display:flex; flex-direction:column; gap:6px; }
+
   .queue-item {
     display:flex; align-items:center; background:var(--panel);
     border:1px solid var(--border); border-left:4px solid var(--blue);
     padding:12px 16px; gap:12px; transition:border-left-color 0.2s,background 0.15s;
-    cursor:grab; user-select:none; touch-action:none;
+    cursor:grab; user-select:none; touch-action: none;
   }
   .queue-item:hover { border-left-color:var(--gold); }
   .queue-item.dragging { opacity:0.35; cursor:grabbing; }
   .queue-item.drag-over { border-left-color:var(--gold); background:rgba(245,179,27,0.07); }
+  /* Touch drag ghost */
   .queue-item.touch-dragging-ghost {
-    position:fixed; z-index:1000; pointer-events:none;
-    opacity:0.9; border-left-color:var(--gold);
-    box-shadow:0 8px 32px rgba(0,0,0,0.6);
-    left:0; top:0;
+    position: fixed; z-index: 1000; pointer-events: none;
+    opacity: 0.9; border-left-color: var(--gold);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    width: var(--ghost-width, 300px);
+    left: 0; top: 0;
   }
+
   .drag-handle {
     display:flex; flex-direction:column; gap:3px; align-items:center;
     color:rgba(255,255,255,0.4); padding:0 4px; cursor:grab; flex-shrink:0;
-    min-width:32px; min-height:44px; justify-content:center;
+    /* Larger tap target on mobile */
+    min-width: 32px; min-height: 44px; justify-content: center;
   }
   .drag-handle span { display:block; width:14px; height:2px; background:currentColor; border-radius:2px; }
+
   .queue-num {
     font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:20px;
     color:rgba(255,255,255,0.2); min-width:28px;
@@ -240,73 +260,21 @@
   .queue-actions button {
     font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:12px;
     letter-spacing:1px; text-transform:uppercase; border:none; padding:6px 12px;
-    cursor:pointer; transition:filter 0.15s,transform 0.1s; min-height:40px;
+    cursor:pointer; transition:filter 0.15s,transform 0.1s;
+    /* Larger tap target */
+    min-height: 40px;
   }
   .queue-actions button:active { transform:scale(0.96); }
   .btn-serve-q { background:var(--blue); color:var(--white); }
   .btn-serve-q:hover { filter:brightness(1.2); }
   .btn-remove-q { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.45); }
   .btn-remove-q:hover { background:var(--red); color:var(--white); filter:none; }
+
   .queue-empty {
     font-family:'Barlow Condensed',sans-serif; font-size:16px; color:rgba(255,255,255,0.2);
     letter-spacing:2px; text-transform:uppercase; text-align:center; padding:40px 0;
     border:1.5px dashed rgba(255,255,255,0.08);
   }
-
-  /* ── MENU MANAGEMENT ── */
-  .menu-section { margin-top: 32px; }
-  .menu-section-heading {
-    display:flex; align-items:center; gap:12px; margin-bottom:16px;
-  }
-  .menu-section-heading h2 {
-    font-family:'Barlow Condensed',sans-serif; font-weight:900; font-style:italic;
-    font-size:22px; letter-spacing:2px; text-transform:uppercase;
-  }
-  .menu-add-row { display:flex; gap:8px; margin-bottom:8px; flex-wrap: wrap; }
-  .menu-add-row input {
-    background:rgba(255,255,255,0.06); border:1.5px solid var(--border);
-    color:var(--white); font-family:'Barlow',sans-serif; font-size:15px;
-    padding:10px 14px; outline:none; transition:border-color 0.2s;
-  }
-  .menu-add-row input:focus { border-color:var(--gold); }
-  .menu-add-row input.inp-name { flex: 2; min-width: 140px; }
-  .menu-add-row input.inp-desc { flex: 3; min-width: 140px; }
-  .menu-add-row input.inp-cat  { flex: 1.5; min-width: 110px; }
-  .menu-add-row input::placeholder { color:rgba(255,255,255,0.25); }
-
-  .menu-list { display:flex; flex-direction:column; gap:6px; }
-  .menu-item-admin {
-    display:flex; align-items:center; gap:12px;
-    background:var(--panel); border:1px solid var(--border); border-left:4px solid var(--gold);
-    padding:10px 14px;
-  }
-  .menu-item-admin-info { flex:1; }
-  .menu-item-admin-name {
-    font-family:'Barlow Condensed',sans-serif; font-weight:700; font-style:italic;
-    font-size:18px; text-transform:uppercase; color:var(--white);
-  }
-  .menu-item-admin-meta {
-    font-family:'Barlow',sans-serif; font-size:12px; color:rgba(255,255,255,0.4);
-    margin-top:2px;
-  }
-  .menu-item-admin-cat {
-    font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700;
-    letter-spacing:2px; text-transform:uppercase; color:var(--gold); opacity:0.7;
-    margin-right: 8px;
-  }
-  .btn-remove-menu {
-    font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:12px;
-    letter-spacing:1px; text-transform:uppercase; border:none; padding:6px 12px;
-    cursor:pointer; min-height:36px; background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.45);
-    transition:background 0.15s;
-  }
-  .btn-remove-menu:hover { background:var(--red); color:var(--white); }
-  .menu-empty-admin {
-    font-family:'Barlow Condensed',sans-serif; font-size:15px; color:rgba(255,255,255,0.2);
-    letter-spacing:2px; text-transform:uppercase; text-align:center; padding:30px 0;
-    border:1.5px dashed rgba(255,255,255,0.08);
-  }
-  .menu-clear-btn { margin-top: 10px; }
 
   .hold-banner {
     display:none; background:var(--gold); color:var(--dark); text-align:center;
@@ -316,15 +284,23 @@
   .hold-banner.visible { display:block; }
   .divider { height:1px; background:var(--border); margin:4px 0; }
 
+  /* Drop indicator line for touch drag */
+  .drop-indicator {
+    height: 3px; background: var(--gold); border-radius: 2px;
+    margin: -3px 0;
+    display: none;
+  }
+  .drop-indicator.visible { display: block; }
+
   body.staff-mode .btn,body.staff-mode .btn-status,
   body.staff-mode .add-row input,body.staff-mode .auto-row input { font-size:20px; padding:18px 24px; }
 
   @media (max-width:700px) {
     .layout { grid-template-columns:1fr; }
     .sidebar { border-right:none; border-bottom:1px solid var(--border); }
-    .main { padding:16px; }
-    .serve-next-btn { position:static; margin-top:16px; width:100%; }
-    .now-serving-block { padding-bottom:16px; }
+    .main { padding: 16px; }
+    .serve-next-btn { position: static; margin-top: 16px; width: 100%; }
+    .now-serving-block { padding-bottom: 16px; }
   }
 </style>
 </head>
@@ -386,7 +362,7 @@
         <div class="status-grid">
           <button class="btn-status" onclick="setStatus('On Time')" data-status="On Time">✅ On Time</button>
           <button class="btn-status" onclick="setStatus('Cooking')" data-status="Cooking">🔥 Cooking</button>
-          <button class="btn-status" onclick="setStatus('Waiting on Chips')" data-status="Waiting on Chips">🍟 Waiting</button>
+          <button class="btn-status" onclick="setStatus('Waiting on Chips')" data-status="Waiting on Chips">🍟 Waiting on Chips</button>
           <button class="btn-status" onclick="setStatus('Delayed')" data-status="Delayed">⚠️ Delayed</button>
         </div>
       </div>
@@ -410,7 +386,6 @@
 
     <div class="main">
 
-      <!-- Now Serving -->
       <div class="now-serving-block">
         <div class="now-label">
           <div class="now-rule"></div>
@@ -422,7 +397,6 @@
         <button class="serve-next-btn" onclick="serveNext()">▶ Serve Next</button>
       </div>
 
-      <!-- Queue -->
       <div class="queue-heading">
         <h2>Up Next</h2>
         <div class="queue-count" id="queueCount">0</div>
@@ -431,27 +405,6 @@
       <ul class="queue-list" id="queueList">
         <li class="queue-empty">Queue is empty</li>
       </ul>
-
-      <!-- Menu Management -->
-      <div class="menu-section">
-        <div class="menu-section-heading">
-          <h2>Tonight's Menu</h2>
-          <div class="queue-count" id="menuCount" style="background:var(--gold);color:var(--dark);">0</div>
-        </div>
-
-        <div class="menu-add-row">
-          <input class="inp-name" id="menuItemName" placeholder="Item name…" onkeydown="if(event.key==='Enter')addMenuItem()">
-          <input class="inp-desc" id="menuItemDesc" placeholder="Description (optional)…">
-          <input class="inp-cat"  id="menuItemCat"  placeholder="Category (optional)…">
-          <button class="btn btn-gold" onclick="addMenuItem()">Add</button>
-        </div>
-
-        <div class="menu-list" id="menuList">
-          <div class="menu-empty-admin">No menu items yet</div>
-        </div>
-
-        <button class="btn btn-ghost menu-clear-btn" onclick="clearMenu()">🗑 Clear Entire Menu</button>
-      </div>
 
     </div>
   </div>
@@ -479,21 +432,24 @@ const DEFAULT_QUEUE = [
 let autoTimer = null;
 let holdMode = false;
 let currentQueue = [];
-let currentMenu = [];
 
-// ── MOUSE DRAG ────────────────────────────────────────────────────────────
+// ── MOUSE DRAG ──────────────────────────────────────────────────────────────
 let dragSrcIndex = null;
 
 function setupMouseDrag(items) {
   items.forEach((item, i) => {
     item.setAttribute("draggable", true);
     item.addEventListener("dragstart", e => {
-      dragSrcIndex = i; item.classList.add("dragging");
+      dragSrcIndex = i;
+      item.classList.add("dragging");
       e.dataTransfer.effectAllowed = "move";
     });
-    item.addEventListener("dragend", () => items.forEach(el => el.classList.remove("dragging","drag-over")));
+    item.addEventListener("dragend", () => {
+      items.forEach(el => el.classList.remove("dragging", "drag-over"));
+    });
     item.addEventListener("dragover", e => {
-      e.preventDefault(); e.dataTransfer.dropEffect = "move";
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
       items.forEach(el => el.classList.remove("drag-over"));
       item.classList.add("drag-over");
     });
@@ -510,7 +466,7 @@ function setupMouseDrag(items) {
   });
 }
 
-// ── TOUCH DRAG ────────────────────────────────────────────────────────────
+// ── TOUCH DRAG ──────────────────────────────────────────────────────────────
 let touchDragIndex = null;
 let touchGhost = null;
 let touchOffsetX = 0;
@@ -524,41 +480,62 @@ function setupTouchDrag(items) {
     handle.addEventListener("touchstart", e => {
       e.preventDefault();
       touchDragIndex = i;
+
       const touch = e.touches[0];
       const rect = item.getBoundingClientRect();
       touchOffsetX = touch.clientX - rect.left;
       touchOffsetY = touch.clientY - rect.top;
+
+      // Create ghost
       touchGhost = item.cloneNode(true);
       touchGhost.classList.add("touch-dragging-ghost");
+      touchGhost.style.setProperty("--ghost-width", rect.width + "px");
       touchGhost.style.width = rect.width + "px";
       touchGhost.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
       document.body.appendChild(touchGhost);
+
       item.style.opacity = "0.3";
     }, { passive: false });
 
     handle.addEventListener("touchmove", e => {
       e.preventDefault();
-      if (!touchGhost) return;
+      if (touchGhost === null) return;
       const touch = e.touches[0];
-      touchGhost.style.transform = `translate(${touch.clientX - touchOffsetX}px, ${touch.clientY - touchOffsetY}px)`;
+      const x = touch.clientX - touchOffsetX;
+      const y = touch.clientY - touchOffsetY;
+      touchGhost.style.transform = `translate(${x}px, ${y}px)`;
+
+      // Highlight target row
       items.forEach(el => el.classList.remove("drag-over"));
-      items.forEach((el, idx) => {
+      const list = document.getElementById("queueList");
+      const listItems = Array.from(list.querySelectorAll(".queue-item:not(.touch-dragging-ghost)"));
+      listItems.forEach((el, idx) => {
         if (idx === touchDragIndex) return;
         const r = el.getBoundingClientRect();
-        if (touch.clientY >= r.top && touch.clientY < r.top + r.height) el.classList.add("drag-over");
+        const midY = r.top + r.height / 2;
+        if (touch.clientY >= r.top && touch.clientY < r.top + r.height) {
+          el.classList.add("drag-over");
+        }
       });
     }, { passive: false });
 
     handle.addEventListener("touchend", e => {
       if (touchGhost) { touchGhost.remove(); touchGhost = null; }
       items.forEach(el => { el.classList.remove("drag-over"); el.style.opacity = ""; });
+
       if (touchDragIndex === null) return;
       const touch = e.changedTouches[0];
+      const list = document.getElementById("queueList");
+      const listItems = Array.from(list.querySelectorAll(".queue-item"));
+
       let targetIndex = null;
-      items.forEach((el, idx) => {
+      listItems.forEach((el, idx) => {
         const r = el.getBoundingClientRect();
-        if (touch.clientY >= r.top && touch.clientY < r.top + r.height) targetIndex = idx;
+        if (touch.clientY >= r.top && touch.clientY < r.top + r.height) {
+          targetIndex = idx;
+        }
       });
+
       if (targetIndex !== null && targetIndex !== touchDragIndex) {
         let q = [...currentQueue];
         const moved = q.splice(touchDragIndex, 1)[0];
@@ -570,7 +547,7 @@ function setupTouchDrag(items) {
   });
 }
 
-// ── QUEUE CONTROLS ────────────────────────────────────────────────────────
+// ── FIREBASE ────────────────────────────────────────────────────────────────
 function checkPin() {
   if (document.getElementById("pin").value === "1234") {
     document.getElementById("loginBox").style.display = "none";
@@ -640,7 +617,8 @@ function startAuto() {
   autoTimer = setInterval(async () => {
     let d = await ref.get();
     let data = d.data() || {};
-    if (holdMode || !data.queue?.length) return;
+    if (holdMode) return;
+    if (!data.queue?.length) return;
     let s = data.status || "";
     if (s.includes("Waiting") || s.includes("Cooking") || s.includes("Delayed")) return;
     serveNext();
@@ -648,7 +626,8 @@ function startAuto() {
 }
 
 function stopAuto() {
-  clearInterval(autoTimer); autoTimer = null;
+  clearInterval(autoTimer);
+  autoTimer = null;
   document.getElementById("autoIndicator").className = "auto-indicator";
   document.getElementById("autoIndicator").innerHTML = '<div class="dot"></div>OFF';
 }
@@ -669,70 +648,10 @@ function removeIndex(i) {
   });
 }
 
-// ── MENU CONTROLS ─────────────────────────────────────────────────────────
-function addMenuItem() {
-  const name = document.getElementById("menuItemName").value.trim();
-  if (!name) return;
-  const desc = document.getElementById("menuItemDesc").value.trim();
-  const cat  = document.getElementById("menuItemCat").value.trim();
-
-  const item = { name };
-  if (desc) item.desc = desc;
-  if (cat)  item.category = cat;
-
-  ref.get().then(doc => {
-    const menu = doc.data()?.menu || [];
-    menu.push(item);
-    ref.set({ menu }, { merge: true });
-    document.getElementById("menuItemName").value = "";
-    document.getElementById("menuItemDesc").value = "";
-    document.getElementById("menuItemCat").value  = "";
-  });
-}
-
-function removeMenuItem(i) {
-  ref.get().then(doc => {
-    const menu = doc.data()?.menu || [];
-    menu.splice(i, 1);
-    ref.set({ menu }, { merge: true });
-  });
-}
-
-function clearMenu() {
-  if (!confirm("Clear the entire menu?")) return;
-  ref.set({ menu: [] }, { merge: true });
-}
-
-function renderAdminMenu(items) {
-  const list = document.getElementById("menuList");
-  document.getElementById("menuCount").textContent = items.length;
-  if (!items.length) {
-    list.innerHTML = '<div class="menu-empty-admin">No menu items yet</div>';
-    return;
-  }
-  list.innerHTML = items.map((item, i) => {
-    const name = typeof item === "string" ? item : item.name;
-    const desc = typeof item === "string" ? "" : (item.desc || "");
-    const cat  = typeof item === "string" ? "" : (item.category || "");
-    return `
-      <div class="menu-item-admin">
-        <div class="menu-item-admin-info">
-          ${cat ? `<span class="menu-item-admin-cat">${cat}</span>` : ""}
-          <span class="menu-item-admin-name">${name}</span>
-          ${desc ? `<div class="menu-item-admin-meta">${desc}</div>` : ""}
-        </div>
-        <button class="btn-remove-menu" onclick="removeMenuItem(${i})">✕</button>
-      </div>`;
-  }).join("");
-}
-
-// ── FIREBASE LISTENER ─────────────────────────────────────────────────────
 ref.onSnapshot(doc => {
-  const data = doc.data() || {};
-  const q = data.queue || [];
-  const menu = data.menu || [];
+  let data = doc.data() || {};
+  let q = data.queue || [];
   currentQueue = q;
-  currentMenu = menu;
 
   document.getElementById("nowTeam").textContent = data.now || "—";
   document.getElementById("statusBadge").textContent = data.status || "On Time";
@@ -742,27 +661,27 @@ ref.onSnapshot(doc => {
     b.classList.toggle("active-status", b.dataset.status === (data.status || "On Time"));
   });
 
-  const list = document.getElementById("queueList");
+  let list = document.getElementById("queueList");
   if (!q.length) {
     list.innerHTML = '<li class="queue-empty">Queue is empty</li>';
-  } else {
-    list.innerHTML = q.map((t, i) => `
-      <li class="queue-item">
-        <div class="drag-handle"><span></span><span></span><span></span></div>
-        <span class="queue-num">${i + 1}</span>
-        <span class="queue-name">${t}</span>
-        <div class="queue-actions">
-          <button class="btn-serve-q" onclick="serveIndex(${i})">▶ Serve</button>
-          <button class="btn-remove-q" onclick="removeIndex(${i})">✕</button>
-        </div>
-      </li>
-    `).join("");
-    const items = Array.from(list.querySelectorAll(".queue-item"));
-    setupMouseDrag(items);
-    setupTouchDrag(items);
+    return;
   }
 
-  renderAdminMenu(menu);
+  list.innerHTML = q.map((t, i) => `
+    <li class="queue-item">
+      <div class="drag-handle"><span></span><span></span><span></span></div>
+      <span class="queue-num">${i + 1}</span>
+      <span class="queue-name">${t}</span>
+      <div class="queue-actions">
+        <button class="btn-serve-q" onclick="serveIndex(${i})">▶ Serve</button>
+        <button class="btn-remove-q" onclick="removeIndex(${i})">✕</button>
+      </div>
+    </li>
+  `).join("");
+
+  const items = Array.from(list.querySelectorAll(".queue-item"));
+  setupMouseDrag(items);
+  setupTouchDrag(items);
 });
 </script>
 </body>
