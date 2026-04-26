@@ -1,26 +1,46 @@
-<!-- ================= ADMIN PAGE ================= -->
-
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Display</title>
+<title>Admin Panel</title>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<style>
 
-input { padding:10px; margin:5px; }
-li { margin:5px 0; }
+<style>
+body { font-family: Arial; padding:20px; }
+button { margin:5px; padding:10px; }
+
+#adminPanel { display:none; }
+
+#loginBox {
+  max-width:300px;
+  margin:auto;
+  margin-top:100px;
+  text-align:center;
+}
+
+input { padding:10px; margin:10px; width:80%; }
 </style>
 </head>
+
 <body>
+
+<!-- ================= LOGIN ================= -->
+<div id="loginBox">
+  <h2>Admin Login</h2>
+  <input type="password" id="pinInput" placeholder="Enter PIN" />
+  <br>
+  <button onclick="checkPIN()">Login</button>
+</div>
+
+<!-- ================= ADMIN ================= -->
+<div id="adminPanel">
+
 <h1>Admin Panel</h1>
 
-<input id="newTeam" placeholder="Add team name" />
-<button onclick="addTeam()">Add</button>
-
-<h3>Queue</h3>
-<ul id="queueList"></ul>
+<h3>Set Now Serving</h3>
+<div id="buttons"></div>
 
 <h3>Status</h3>
 <button onclick="setStatus('Ready')">Ready</button>
@@ -28,47 +48,92 @@ li { margin:5px 0; }
 <button onclick="setStatus('Cooking')">Cooking</button>
 <button onclick="setStatus('Delayed')">Delayed</button>
 
+<h3>Queue Controls</h3>
+<button onclick="clearQueue()">🧹 Clear Queue</button>
+
+<hr>
+
+<h3>Current Queue</h3>
+<ul id="queueList"></ul>
+
+</div>
+
 <script>
-const firebaseConfig = { apiKey:"AIzaSyAx3iNl8g7niBW5bz0TWrrA73BXKYDCnIM", authDomain:"canteenqueue-61bfd.firebaseapp.com", projectId:"canteenqueue-61bfd" };
+// ================= FIREBASE =================
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
+};
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const ref = db.collection("canteen").doc("queue");
 
-function render(data){
-  let list = document.getElementById('queueList');
-  list.innerHTML='';
+// ================= PIN =================
+const ADMIN_PIN = "1234"; // CHANGE THIS
 
-  (data.queue||[]).forEach((t,i)=>{
-    let li=document.createElement('li');
-    li.innerHTML = `${t} 
-    <button onclick="serve('${t}')">Serve</button>
-    <button onclick="up(${i})">⬆</button>
-    <button onclick="down(${i})">⬇</button>
-    <button onclick="removeItem('${t}')">❌</button>`;
+function checkPIN() {
+  let pin = document.getElementById("pinInput").value;
+  if (pin === ADMIN_PIN) {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("adminPanel").style.display = "block";
+  } else {
+    alert("Wrong PIN");
+  }
+}
+
+// ================= DEFAULT TEAMS =================
+const defaultQueue = [
+  "Women's & Bar",
+  "Under 19s",
+  "Reserves & Thirds",
+  "Netballers",
+  "Seniors & Coaches"
+];
+
+// ================= INIT =================
+function initIfEmpty() {
+  ref.get().then(doc => {
+    if (!doc.exists) {
+      ref.set({
+        queue: defaultQueue,
+        now: "-",
+        status: "Ready"
+      });
+    }
+  });
+}
+initIfEmpty();
+
+// ================= UI =================
+function render(data) {
+  let list = document.getElementById("queueList");
+  list.innerHTML = "";
+
+  (data.queue || []).forEach((t, i) => {
+    let li = document.createElement("li");
+    li.innerHTML = `
+      ${t}
+      <button onclick="serve(${i})">Serve</button>
+      <button onclick="removeItem(${i})">Remove</button>
+    `;
     list.appendChild(li);
   });
 }
 
-ref.onSnapshot(doc=>{ render(doc.data()||{}); });
+ref.onSnapshot(doc => {
+  render(doc.data() || {});
+});
 
-function addTeam(){
-  let val=document.getElementById('newTeam').value;
-  if(!val) return;
-  ref.get().then(doc=>{
-    let data=doc.data()||{};
-    let q=data.queue||[];
-    q.push(val);
-    ref.set({queue:q},{merge:true});
-  });
-}
-
-function serve(index) {
+// ================= ACTIONS =================
+function serve(i) {
   ref.get().then(doc => {
-    let data = doc.data() || {};
-    let q = data.queue || [];
+    let data = doc.data();
+    let q = data.queue;
 
-    let team = q[index];        // get exact item
-    q.splice(index, 1);         // remove safely
+    let team = q[i];
+    q.splice(i, 1);
 
     ref.set({
       now: team,
@@ -77,35 +142,41 @@ function serve(index) {
   });
 }
 
-function removeItem(team){
-  ref.get().then(doc=>{
-    let data=doc.data()||{};
-    let q=(data.queue||[]).filter(t=>t!==team);
-    ref.set({queue:q},{merge:true});
+function removeItem(i) {
+  ref.get().then(doc => {
+    let data = doc.data();
+    let q = data.queue;
+    q.splice(i, 1);
+
+    ref.set({ queue: q }, { merge: true });
   });
 }
 
-function up(i){
-  ref.get().then(doc=>{
-    let q=doc.data().queue;
-    if(i===0) return;
-    [q[i-1],q[i]]=[q[i],q[i-1]];
-    ref.set({queue:q},{merge:true});
-  });
+function setStatus(status) {
+  ref.set({ status }, { merge: true });
 }
 
-function down(i){
-  ref.get().then(doc=>{
-    let q=doc.data().queue;
-    if(i===q.length-1) return;
-    [q[i+1],q[i]]=[q[i],q[i+1]];
-    ref.set({queue:q},{merge:true});
-  });
+// ================= CLEAR QUEUE =================
+function clearQueue() {
+  ref.set({
+    queue: [],
+    now: "-",
+    status: "Ready"
+  }, { merge: true });
 }
 
-function setStatus(s){
-  ref.set({status:s},{merge:true});
-}
+// ================= ADD BUTTONS =================
+const teams = defaultQueue;
+
+let btnDiv = document.getElementById("buttons");
+
+teams.forEach((t, i) => {
+  let btn = document.createElement("button");
+  btn.innerText = t;
+  btn.onclick = () => serve(i);
+  btnDiv.appendChild(btn);
+});
 </script>
+
 </body>
 </html>
