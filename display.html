@@ -12,349 +12,179 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --red: #CC1F1F;
-    --red-dark: #9B1515;
-    --blue: #1A3A8C;
-    --gold: #F5B31B;
-    --white: #FFFFFF;
-    --dark: #111111;
-  }
+:root {
+  --red: #CC1F1F;
+  --blue: #1A3A8C;
+  --gold: #F5B31B;
+  --white: #FFFFFF;
+}
 
-  html, body { width: 100%; overflow-x: hidden; }
+body {
+  font-family: 'Barlow Condensed', sans-serif;
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: #0a0f0a;
+}
 
-  body {
-    font-family: 'Barlow Condensed', sans-serif;
-    color: var(--white);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    padding: 24px 18px 24px;
-    background-image: repeating-linear-gradient(
-      45deg, transparent, transparent 28px,
-      rgba(255,255,255,0.018) 28px, rgba(255,255,255,0.018) 56px
-    );
-    transition: background-color 0.7s;
-  }
+/* WIDTH CONTROL */
+.now-serving-card,
+.section-card,
+.menu-card,
+.footer-note {
+  width: 100%;
+  max-width: 90vw;
+}
 
-  /* ── STATE THEMES ── */
-  body.on-time { background-color: #0a0f0a; }
-  body.cooking { background-color: #2a1800; animation: bgpulse-cooking 2.5s ease-in-out infinite; }
-  body.waiting { background-color: #1a1a00; animation: bgpulse-waiting 2.5s ease-in-out infinite; }
-  body.delayed { background-color: #2a0000; animation: bgpulse-delayed 1.4s ease-in-out infinite; }
-  body.hold    { background-color: #080808; }
+/* TITLE */
+.title-main {
+  font-size: clamp(48px, 10vw, 110px);
+  font-weight: 900;
+  font-style: italic;
+  text-align: center;
+  line-height: 0.9;
+}
+.title-sub {
+  text-align: center;
+  margin-top: 8px;
+  background: var(--blue);
+  padding: 6px 24px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}
 
-  @keyframes bgpulse-cooking { 0%,100%{background-color:#2a1800;} 50%{background-color:#3d2400;} }
-  @keyframes bgpulse-waiting { 0%,100%{background-color:#1a1a00;} 50%{background-color:#2e2e00;} }
-  @keyframes bgpulse-delayed { 0%,100%{background-color:#2a0000;} 50%{background-color:#4a0000;} }
+/* NOW SERVING */
+.ns-red-bar {
+  height: 16px;
+  background: var(--red);
+}
 
-  /* ── TITLE — gentle zoom breathe ── */
-  .title-block { text-align: center; margin-bottom: 18px; }
-  .title-main {
-    font-weight: 900; font-style: italic;
-    font-size: clamp(52px, 16vw, 120px);
-    text-transform: uppercase;
-    line-height: 0.85; letter-spacing: -2px;
-    text-shadow: 4px 4px 0 rgba(0,0,0,0.5);
-    display: inline-block;
-    animation: title-breathe 4s ease-in-out infinite;
-    transform-origin: center bottom;
-  }
-  @keyframes title-breathe {
-    0%,100% { transform: scale(1);    }
-    50%      { transform: scale(1.035); }
-  }
-  .title-sub {
-    display: inline-block; font-weight: 900; font-style: italic;
-    font-size: clamp(15px, 4vw, 30px); text-transform: uppercase; letter-spacing: 4px;
-    background: var(--blue); color: var(--white); padding: 5px 24px; margin-top: 8px; position: relative;
-  }
-  .title-sub::before, .title-sub::after {
-    content: ''; position: absolute; top: 50%; transform: translateY(-50%);
-    width: 0; height: 0; border-top: 16px solid transparent; border-bottom: 16px solid transparent;
-  }
-  .title-sub::before { right: 100%; border-right: 12px solid var(--blue); }
-  .title-sub::after  { left:  100%; border-left:  12px solid var(--blue); }
+.ns-label-strip {
+  background: white;
+  color: var(--red);
+  text-align: center;
+  padding: 8px;
+  font-weight: 700;
+  letter-spacing: 4px;
+}
 
-  /* ── NOW SERVING CARD ── */
-  .now-serving-card {
-    width: 100%; max-width: 600px;
-    margin-bottom: 14px;
-    overflow: hidden;
-  }
+.ns-team-block {
+  background: var(--blue);
+  padding: 20px;
+  text-align: center;
+}
 
-  .ns-red-bar {
-    height: 18px;
-    background: var(--red);
-    animation: redbar-pulse 1.2s ease-in-out infinite;
-  }
-  @keyframes redbar-pulse {
-    0%,100% { background: var(--red); box-shadow: 0 0 0 rgba(204,31,31,0); }
-    50%      { background: #ff3030;   box-shadow: 0 0 30px rgba(255,48,48,0.8); }
-  }
+.ns-team {
+  font-size: clamp(80px, 14vw, 160px);
+  font-weight: 900;
+  font-style: italic;
+  line-height: 0.9;
+}
 
-  .ns-label-strip {
-    background: var(--white);
-    padding: 10px 22px 8px;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .ns-rule { flex: 1; height: 3px; background: var(--red); }
-  .ns-label {
-    font-weight: 700; font-style: italic;
-    font-size: clamp(14px, 3.5vw, 22px); letter-spacing: 5px;
-    text-transform: uppercase; color: var(--red); white-space: nowrap;
-  }
+.ns-status-block {
+  padding: 14px;
+  text-align: center;
+}
 
-  .ns-team-block {
-    background: var(--blue);
-    padding: 18px 22px 20px;
-    display: flex; align-items: center;
-  }
-  /* VERY large team name for portrait display */
-  .ns-team {
-    font-weight: 900; font-style: italic;
-    font-size: clamp(70px, 20vw, 180px);
-    text-transform: uppercase;
-    letter-spacing: -3px; line-height: 0.85;
-    color: var(--white);
-    transition: opacity 0.3s;
-    display: block;
-    word-break: break-word;
-  }
+.ns-status {
+  font-size: clamp(26px, 4vw, 48px);
+  font-weight: 900;
+}
 
-  /* Status bar — no emojis */
-  .ns-status-block {
-    padding: 13px 22px;
-    background: var(--blue);
-    border-top: 1px solid rgba(255,255,255,0.15);
-    display: flex; align-items: center; gap: 14px;
-  }
-  .ns-status-dot { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
-  .ns-status {
-    font-weight: 900; font-style: italic;
-    font-size: clamp(22px, 5.5vw, 42px);
-    letter-spacing: 3px; text-transform: uppercase;
-  }
+/* QUEUE */
+.queue-row-name {
+  font-size: clamp(28px, 4vw, 44px);
+}
 
-  .status-on-time .ns-status-dot { background: #2ecc71; animation: dot-on-time 1.8s ease-in-out infinite; }
-  .status-on-time .ns-status      { color: #2ecc71; animation: text-on-time 1.8s ease-in-out infinite; }
-  @keyframes dot-on-time {
-    0%,100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.7); }
-    50%     { box-shadow: 0 0 0 10px rgba(46,204,113,0); }
-  }
-  @keyframes text-on-time {
-    0%,100% { opacity: 1; text-shadow: 0 0 0 rgba(46,204,113,0); }
-    50%     { opacity: 0.85; text-shadow: 0 0 24px rgba(46,204,113,0.5); }
-  }
+/* FOOTER */
+.footer-text {
+  font-size: clamp(18px, 3vw, 28px);
+  text-align: center;
+  margin-top: 20px;
+  color: var(--gold);
+}
 
-  .status-cooking .ns-status-dot { background: #f39c12; animation: dot-pulse 1s ease-in-out infinite; }
-  .status-cooking .ns-status      { color: #f39c12; }
-  .status-waiting .ns-status-dot { background: #f1c40f; animation: dot-pulse 1.2s ease-in-out infinite; }
-  .status-waiting .ns-status      { color: #f1c40f; }
-  .status-delayed .ns-status-dot { background: var(--red); animation: dot-pulse 0.7s ease-in-out infinite; }
-  .status-delayed .ns-status      { color: #ff5555; animation: flash-delayed 0.7s ease-in-out infinite; }
-  @keyframes flash-delayed { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
-  .status-hold .ns-status-dot { background: #888; }
-  .status-hold .ns-status      { color: #888; }
-  @keyframes dot-pulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.5); }
-    50%     { box-shadow: 0 0 0 10px rgba(255,255,255,0); }
-  }
+/* MENU */
+.menu-card {
+  margin-top: 24px;
+}
 
-  /* ── QUEUE CARDS ── */
-  .section-card { width: 100%; max-width: 600px; margin-bottom: 12px; }
-  .section-header {
-    display: flex; align-items: center;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1); border-bottom: none;
-    padding: 7px 18px; gap: 10px;
-  }
-  .section-header-label {
-    font-weight: 900; font-style: italic;
-    font-size: clamp(12px, 2.5vw, 16px); letter-spacing: 4px; text-transform: uppercase;
-  }
-  .section-header-label.up-next  { color: var(--gold); }
-  .section-header-label.later-on { color: var(--red); }
-  .section-header-rule { flex: 1; height: 1px; background: rgba(255,255,255,0.15); }
-  .section-body { background: var(--blue); border: 1px solid rgba(255,255,255,0.15); }
-  .queue-row {
-    display: flex; align-items: baseline; gap: 14px;
-    padding: 11px 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
-  }
-  .queue-row:last-child { border-bottom: none; }
-  .queue-row-name {
-    font-weight: 400; font-style: italic;
-    font-size: clamp(22px, 5vw, 40px);
-    text-transform: uppercase; color: var(--white);
-  }
-  .section-empty {
-    font-weight: 700; font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
-    color: rgba(255,255,255,0.25); text-align: center; padding: 16px;
-  }
+.menu-header {
+  text-align: center;
+  padding: 10px;
+  background: rgba(245,179,27,0.1);
+  border: 2px solid rgba(245,179,27,0.4);
+}
 
-  /* ── TONIGHT'S MENU ── */
-  .menu-card { width: 100%; max-width: 600px; margin-bottom: 14px; }
-  .menu-header {
-    display: flex; align-items: center;
-    background: rgba(245,179,27,0.08);
-    border: 1px solid rgba(245,179,27,0.35); border-bottom: none;
-    padding: 7px 18px; gap: 10px;
-  }
-  .menu-header-label {
-    font-weight: 900; font-style: italic;
-    font-size: clamp(12px, 2.5vw, 16px); letter-spacing: 4px; text-transform: uppercase;
-    color: var(--gold);
-  }
-  .menu-header-rule { flex: 1; height: 1px; background: rgba(245,179,27,0.25); }
-  .menu-body {
-    background: rgba(26,58,140,0.55);
-    border: 1px solid rgba(245,179,27,0.2);
-  }
-  .menu-category-row {
-    padding: 9px 20px 3px;
-    font-weight: 700; font-style: italic;
-    font-size: clamp(11px, 2vw, 13px); letter-spacing: 3px; text-transform: uppercase;
-    color: var(--gold); opacity: 0.65;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-  }
-  .menu-item-row {
-    padding: 9px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-  }
-  .menu-item-row:last-child { border-bottom: none; }
-  .menu-item-name {
-    font-weight: 400; font-style: italic;
-    font-size: clamp(20px, 4.5vw, 34px); text-transform: uppercase; color: var(--white);
-  }
-  .menu-item-desc {
-    font-size: clamp(11px, 1.8vw, 13px); color: rgba(255,255,255,0.4);
-    font-family: 'Barlow', sans-serif; margin-top: 1px;
-  }
-  .menu-empty {
-    font-weight: 700; font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
-    color: rgba(255,255,255,0.2); text-align: center; padding: 18px;
-  }
+.menu-header-label {
+  font-size: clamp(16px, 3vw, 22px);
+  letter-spacing: 4px;
+}
 
-  /* ── FOOTER ── */
-  .footer-note {
-    width: 100%; max-width: 600px;
-    display: flex; align-items: flex-start; gap: 14px;
-    margin-top: 6px; padding: 0 2px;
-  }
-  .footer-icon {
-    width: 40px; height: 40px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; margin-top: 3px;
-  }
-  /* LARGER gold footer text */
-  .footer-text {
-    font-weight: 700; font-style: italic;
-    font-size: clamp(15px, 3.5vw, 24px);
-    text-transform: uppercase;
-    letter-spacing: 0.5px; color: var(--gold); line-height: 1.3;
-  }
+.menu-body {
+  background: rgba(26,58,140,0.85);
+  border: 2px solid rgba(245,179,27,0.35);
+}
 
-  /* ── HOLD OVERLAY ── */
-  .hold-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.88);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.5s;
-  }
-  .hold-overlay.visible { opacity: 1; pointer-events: all; }
-  .hold-overlay-text {
-    font-weight: 900; font-style: italic;
-    font-size: clamp(40px, 12vw, 100px); text-transform: uppercase; letter-spacing: -2px;
-    animation: hpulse 2s ease-in-out infinite;
-  }
-  @keyframes hpulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+.menu-category-row {
+  font-size: clamp(14px, 2.5vw, 18px);
+  color: var(--gold);
+  padding: 6px 16px;
+}
 
-  /* ── CINEMATIC OVERLAY ── */
-  .cinematic {
-    position: fixed; inset: 0; background: var(--red);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.25s;
-  }
-  .cinematic.show { opacity: 1; }
-  .cin-label {
-    font-weight: 700; font-size: clamp(14px, 4vw, 24px); letter-spacing: 6px;
-    text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 12px;
-  }
-  .cin-team {
-    font-weight: 900; font-style: italic;
-    font-size: clamp(50px, 14vw, 130px); text-transform: uppercase;
-    letter-spacing: -2px; line-height: 0.9; text-align: center;
-    text-shadow: 0 4px 0 rgba(0,0,0,0.3); padding: 0 20px;
-  }
+.menu-item-row {
+  padding: 10px 16px;
+}
+
+.menu-item-name {
+  font-size: clamp(26px, 5vw, 46px);
+}
+
+.menu-item-desc {
+  font-size: 14px;
+  opacity: 0.6;
+}
 </style>
 </head>
-<body id="screen" class="on-time">
 
-<div class="cinematic" id="cinematic">
-  <div class="cin-label">Now Serving</div>
-  <div class="cin-team" id="cin-team">—</div>
-</div>
+<body>
 
-<div class="hold-overlay" id="holdOverlay">
-  <div class="hold-overlay-text">On Hold</div>
-</div>
-
-<div class="title-block">
-  <div class="title-main">Selection Night<br>Dinner</div>
-  <div class="title-sub">Canteen Queue</div>
-</div>
+<div class="title-main">Selection Night Dinner</div>
+<div class="title-sub">Canteen Queue</div>
 
 <div class="now-serving-card">
   <div class="ns-red-bar"></div>
-  <div class="ns-label-strip">
-    <div class="ns-rule"></div>
-    <div class="ns-label">Now Serving</div>
-    <div class="ns-rule"></div>
-  </div>
+  <div class="ns-label-strip">Now Serving</div>
   <div class="ns-team-block">
-    <span class="ns-team" id="nowTeam">—</span>
+    <div class="ns-team" id="nowTeam">—</div>
   </div>
-  <div class="ns-status-block status-on-time" id="statusBlock">
-    <div class="ns-status-dot"></div>
+  <div class="ns-status-block">
     <div class="ns-status" id="statusText">On Time</div>
   </div>
 </div>
 
-<div class="section-card" id="upNextCard">
-  <div class="section-header">
-    <div class="section-header-label up-next">Up Next</div>
-    <div class="section-header-rule"></div>
-  </div>
-  <div class="section-body" id="upNextBody">
-    <div class="section-empty">Nothing queued</div>
+<div class="section-card">
+  <div id="upNextBody"></div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer-note">
+  <div class="footer-text">
+    If you're here outside your allocated time, please wait until your team is called.
   </div>
 </div>
 
-<div class="section-card" id="laterCard" style="display:none;">
-  <div class="section-header">
-    <div class="section-header-label later-on">Later On</div>
-    <div class="section-header-rule"></div>
-  </div>
-  <div class="section-body" id="laterBody"></div>
-</div>
-
+<!-- MENU NOW BELOW FOOTER -->
 <div class="menu-card" id="menuCard" style="display:none;">
   <div class="menu-header">
     <div class="menu-header-label">Tonight's Menu</div>
-    <div class="menu-header-rule"></div>
   </div>
-  <div class="menu-body" id="menuBody">
-    <div class="menu-empty">No menu set</div>
-  </div>
-</div>
-
-<div class="footer-note">
-  <div class="footer-icon">🕐</div>
-  <div class="footer-text">
-    If you're here outside of your allocated time, please allow
-    the team with the current slot to be served first.
-  </div>
+  <div class="menu-body" id="menuBody"></div>
 </div>
 
 <script>
@@ -366,109 +196,51 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 const ref = db.collection("canteen").doc("queue");
-let lastNow = "";
 
-function cinematic(team) {
-  const el = document.getElementById("cinematic");
-  document.getElementById("cin-team").textContent = team;
-  el.classList.add("show");
-  setTimeout(() => el.classList.remove("show"), 2200);
-}
+ref.onSnapshot(doc => {
+  const d = doc.data() || {};
+  document.getElementById("nowTeam").textContent = d.now || "—";
+  document.getElementById("statusText").textContent = d.status || "On Time";
 
-function setState(status, mode) {
-  const body = document.getElementById("screen");
-  const block = document.getElementById("statusBlock");
-  const text  = document.getElementById("statusText");
-  body.className = "";
+  const queue = d.queue || [];
+  const upBody = document.getElementById("upNextBody");
+  upBody.innerHTML = queue.map(t => `<div class="queue-row-name">${t}</div>`).join("");
 
-  if (mode === "hold") {
-    body.classList.add("hold");
-    block.className = "ns-status-block status-hold";
-    text.textContent = "On Hold";
-    document.getElementById("holdOverlay").classList.add("visible");
-    return;
-  }
-  document.getElementById("holdOverlay").classList.remove("visible");
-
-  const s = status || "";
-  if (s.includes("Cooking")) {
-    body.classList.add("cooking");
-    block.className = "ns-status-block status-cooking";
-    text.textContent = "Cooking";
-  } else if (s.includes("Waiting")) {
-    body.classList.add("waiting");
-    block.className = "ns-status-block status-waiting";
-    text.textContent = "Waiting on Chips";
-  } else if (s.includes("Delayed")) {
-    body.classList.add("delayed");
-    block.className = "ns-status-block status-delayed";
-    text.textContent = "Delayed";
-  } else {
-    body.classList.add("on-time");
-    block.className = "ns-status-block status-on-time";
-    text.textContent = "On Time";
-  }
-}
-
-function renderMenu(items) {
+  const menu = d.menu || [];
   const card = document.getElementById("menuCard");
   const body = document.getElementById("menuBody");
-  if (!items || items.length === 0) { card.style.display = "none"; return; }
-  card.style.display = "";
+
+  if (!menu.length) {
+    card.style.display = "none";
+    return;
+  }
+
+  card.style.display = "block";
+
   let html = "";
   let lastCat = null;
-  items.forEach(item => {
-    const name = typeof item === "string" ? item : item.name;
-    const desc = typeof item === "string" ? "" : (item.desc || "");
-    const cat  = typeof item === "string" ? "" : (item.category || "");
+
+  menu.forEach(item => {
+    const name = item.name || item;
+    const desc = item.desc || "";
+    const cat = item.category || "";
+
     if (cat && cat !== lastCat) {
       html += `<div class="menu-category-row">${cat}</div>`;
       lastCat = cat;
     }
-    html += `<div class="menu-item-row">
-      <div class="menu-item-name">${name}</div>
-      ${desc ? `<div class="menu-item-desc">${desc}</div>` : ""}
-    </div>`;
+
+    html += `
+      <div class="menu-item-row">
+        <div class="menu-item-name">${name}</div>
+        ${desc ? `<div class="menu-item-desc">${desc}</div>` : ""}
+      </div>
+    `;
   });
+
   body.innerHTML = html;
-}
-
-ref.onSnapshot(doc => {
-  const d = doc.data() || {};
-  const queue = d.queue || [];
-
-  if (d.now && d.now !== lastNow) {
-    cinematic(d.now);
-    const el = document.getElementById("nowTeam");
-    el.style.opacity = 0;
-    setTimeout(() => { el.textContent = d.now; el.style.opacity = 1; }, 300);
-  } else if (!d.now) {
-    document.getElementById("nowTeam").textContent = "—";
-  }
-  lastNow = d.now;
-
-  const upBody = document.getElementById("upNextBody");
-  if (queue.length > 0) {
-    upBody.innerHTML = `<div class="queue-row"><span class="queue-row-name">${queue[0]}</span></div>`;
-  } else {
-    upBody.innerHTML = `<div class="section-empty">Nothing queued</div>`;
-  }
-  document.getElementById("upNextCard").style.display = "";
-
-  const laterBody = document.getElementById("laterBody");
-  const laterCard = document.getElementById("laterCard");
-  if (queue.length > 1) {
-    laterBody.innerHTML = queue.slice(1).map(t =>
-      `<div class="queue-row"><span class="queue-row-name">${t}</span></div>`
-    ).join("");
-    laterCard.style.display = "";
-  } else {
-    laterCard.style.display = "none";
-  }
-
-  renderMenu(d.menu || []);
-  setState(d.status, d.mode);
 });
 </script>
+
 </body>
 </html>
