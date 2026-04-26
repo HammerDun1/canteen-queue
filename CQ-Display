@@ -1,0 +1,99 @@
+<!-- ================= ENHANCED LIVE CANTEEN SYSTEM ================= -->
+<!-- Features added:
+- Animated NOW SERVING
+- Sound alert on change
+- Colour-coded status
+- Add custom teams
+- Reorder queue
+- Remove items
+- Better UI
+-->
+
+<!-- ================= DISPLAY PAGE ================= -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Display</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+<style>
+body { margin:0; font-family:Arial; background:#002870; color:white; }
+.container { display:flex; height:100vh; }
+.column { flex:1; padding:30px; }
+.now { font-size:4em; font-weight:bold; transition:0.3s; }
+.flash { animation: flash 0.5s ease; }
+@keyframes flash { 0%{opacity:0;} 100%{opacity:1;} }
+.status { font-size:1.8em; margin-top:10px; padding:10px; border-radius:10px; }
+.ready { background:green; }
+.waiting { background:orange; }
+.delayed { background:red; }
+.cooking { background:blue; }
+li { font-size:1.6em; margin:10px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="column">
+<h1>NOW SERVING</h1>
+<div id="nowServing" class="now">-</div>
+<div id="status" class="status">Ready</div>
+</div>
+<div class="column">
+<h2>UP NEXT</h2>
+<ul id="upNext"></ul>
+</div>
+<div class="column">
+<h2>LATER ON</h2>
+<ul id="later"></ul>
+</div>
+</div>
+
+<audio id="ding" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
+<script>
+const firebaseConfig = { apiKey:"AIzaSyAx3iNl8g7niBW5bz0TWrrA73BXKYDCnIM", authDomain:"canteenqueue-61bfd.firebaseapp.com", projectId:"canteenqueue-61bfd" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let lastNow = '';
+
+function getStatusClass(s){
+  if(s.includes('Ready')) return 'ready';
+  if(s.includes('Waiting')) return 'waiting';
+  if(s.includes('Delayed')) return 'delayed';
+  if(s.includes('Cooking')) return 'cooking';
+  return '';
+}
+
+db.collection("canteen").doc("queue").onSnapshot(doc=>{
+  let data = doc.data(); if(!data) return;
+
+  let nowEl = document.getElementById('nowServing');
+  if(data.now !== lastNow){
+    document.getElementById('ding').play();
+    nowEl.classList.add('flash');
+    setTimeout(()=>nowEl.classList.remove('flash'),500);
+    lastNow = data.now;
+  }
+
+  nowEl.innerText = data.now || '-';
+
+  let statusEl = document.getElementById('status');
+  statusEl.innerText = data.status || 'Ready';
+  statusEl.className = 'status ' + getStatusClass(data.status||'');
+
+  let upNext = document.getElementById('upNext');
+  let later = document.getElementById('later');
+  upNext.innerHTML=''; later.innerHTML='';
+
+  (data.queue||[]).slice(0,2).forEach(t=>{
+    let li=document.createElement('li'); li.innerText=t; upNext.appendChild(li);
+  });
+  (data.queue||[]).slice(2).forEach(t=>{
+    let li=document.createElement('li'); li.innerText=t; later.appendChild(li);
+  });
+});
+</script>
+</body>
+</html>

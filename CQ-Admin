@@ -1,0 +1,94 @@
+<!-- ================= ADMIN PAGE ================= -->
+input { padding:10px; margin:5px; }
+li { margin:5px 0; }
+</style>
+</head>
+<body>
+<h1>Admin Panel</h1>
+
+<input id="newTeam" placeholder="Add team name" />
+<button onclick="addTeam()">Add</button>
+
+<h3>Queue</h3>
+<ul id="queueList"></ul>
+
+<h3>Status</h3>
+<button onclick="setStatus('Ready')">Ready</button>
+<button onclick="setStatus('Waiting on Chips')">Waiting on Chips</button>
+<button onclick="setStatus('Cooking')">Cooking</button>
+<button onclick="setStatus('Delayed')">Delayed</button>
+
+<script>
+const firebaseConfig = { apiKey:"AIzaSyAx3iNl8g7niBW5bz0TWrrA73BXKYDCnIM", authDomain:"canteenqueue-61bfd.firebaseapp.com", projectId:"canteenqueue-61bfd" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const ref = db.collection("canteen").doc("queue");
+
+function render(data){
+  let list = document.getElementById('queueList');
+  list.innerHTML='';
+
+  (data.queue||[]).forEach((t,i)=>{
+    let li=document.createElement('li');
+    li.innerHTML = `${t} 
+    <button onclick="serve('${t}')">Serve</button>
+    <button onclick="up(${i})">⬆</button>
+    <button onclick="down(${i})">⬇</button>
+    <button onclick="removeItem('${t}')">❌</button>`;
+    list.appendChild(li);
+  });
+}
+
+ref.onSnapshot(doc=>{ render(doc.data()||{}); });
+
+function addTeam(){
+  let val=document.getElementById('newTeam').value;
+  if(!val) return;
+  ref.get().then(doc=>{
+    let data=doc.data()||{};
+    let q=data.queue||[];
+    q.push(val);
+    ref.set({queue:q},{merge:true});
+  });
+}
+
+function serve(team){
+  ref.get().then(doc=>{
+    let data=doc.data()||{};
+    let q=(data.queue||[]).filter(t=>t!==team);
+    ref.set({now:team, queue:q},{merge:true});
+  });
+}
+
+function removeItem(team){
+  ref.get().then(doc=>{
+    let data=doc.data()||{};
+    let q=(data.queue||[]).filter(t=>t!==team);
+    ref.set({queue:q},{merge:true});
+  });
+}
+
+function up(i){
+  ref.get().then(doc=>{
+    let q=doc.data().queue;
+    if(i===0) return;
+    [q[i-1],q[i]]=[q[i],q[i-1]];
+    ref.set({queue:q},{merge:true});
+  });
+}
+
+function down(i){
+  ref.get().then(doc=>{
+    let q=doc.data().queue;
+    if(i===q.length-1) return;
+    [q[i+1],q[i]]=[q[i],q[i+1]];
+    ref.set({queue:q},{merge:true});
+  });
+}
+
+function setStatus(s){
+  ref.set({status:s},{merge:true});
+}
+</script>
+</body>
+</html>
