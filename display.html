@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Canteen Display</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,179 +12,333 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
-  --red: #CC1F1F;
-  --blue: #1A3A8C;
-  --gold: #F5B31B;
-  --white: #FFFFFF;
-}
+  :root {
+    --red: #CC1F1F;
+    --red-dark: #9B1515;
+    --blue: #1A3A8C;
+    --gold: #F5B31B;
+    --white: #FFFFFF;
+    --dark: #111111;
+  }
 
-body {
-  font-family: 'Barlow Condensed', sans-serif;
-  color: var(--white);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-  padding: 24px;
-  background: #0a0f0a;
-}
+  html, body { width: 100%; height: 100%; overflow: hidden; }
 
-/* WIDTH CONTROL */
-.now-serving-card,
-.section-card,
-.menu-card,
-.footer-note {
-  width: 100%;
-  max-width: 90vw;
-}
+  body {
+    font-family: 'Barlow Condensed', sans-serif;
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding: 36px 24px 24px;
+    background-image: repeating-linear-gradient(
+      45deg, transparent, transparent 28px,
+      rgba(255,255,255,0.018) 28px, rgba(255,255,255,0.018) 56px
+    );
+    transition: background-color 0.7s;
+  }
 
-/* TITLE */
-.title-main {
-  font-size: clamp(48px, 10vw, 110px);
-  font-weight: 900;
-  font-style: italic;
-  text-align: center;
-  line-height: 0.9;
-}
-.title-sub {
-  text-align: center;
-  margin-top: 8px;
-  background: var(--blue);
-  padding: 6px 24px;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-}
+  /* ── STRONG STATE THEMES ── */
+  body.on-time  { background-color: #0a0f0a; }
+  body.cooking  { background-color: #2a1800; }
+  body.waiting  { background-color: #1a1a00; }
+  body.delayed  { background-color: #2a0000; }
+  body.hold     { background-color: #080808; }
 
-/* NOW SERVING */
-.ns-red-bar {
-  height: 16px;
-  background: var(--red);
-}
+  /* ── Background pulse for non-on-time states ── */
+  body.cooking  { animation: bgpulse-cooking 2.5s ease-in-out infinite; }
+  body.waiting  { animation: bgpulse-waiting 2.5s ease-in-out infinite; }
+  body.delayed  { animation: bgpulse-delayed 1.4s ease-in-out infinite; }
 
-.ns-label-strip {
-  background: white;
-  color: var(--red);
-  text-align: center;
-  padding: 8px;
-  font-weight: 700;
-  letter-spacing: 4px;
-}
+  @keyframes bgpulse-cooking {
+    0%,100% { background-color: #2a1800; }
+    50%     { background-color: #3d2400; }
+  }
+  @keyframes bgpulse-waiting {
+    0%,100% { background-color: #1a1a00; }
+    50%     { background-color: #2e2e00; }
+  }
+  @keyframes bgpulse-delayed {
+    0%,100% { background-color: #2a0000; }
+    50%     { background-color: #4a0000; }
+  }
 
-.ns-team-block {
-  background: var(--blue);
-  padding: 20px;
-  text-align: center;
-}
+  /* ── TITLE ── */
+  .title-block { text-align: center; margin-bottom: 28px; }
+  .title-main {
+    font-weight: 900; font-style: italic;
+    font-size: clamp(52px, 10vw, 96px); text-transform: uppercase;
+    line-height: 0.85; letter-spacing: -2px;
+    text-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+  }
+  .title-sub {
+    display: inline-block; font-weight: 900; font-style: italic;
+    font-size: clamp(20px, 4vw, 36px); text-transform: uppercase; letter-spacing: 4px;
+    background: var(--blue); color: var(--white); padding: 5px 28px; margin-top: 6px; position: relative;
+  }
+  .title-sub::before, .title-sub::after {
+    content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+    width: 0; height: 0; border-top: 18px solid transparent; border-bottom: 18px solid transparent;
+  }
+  .title-sub::before { right: 100%; border-right: 14px solid var(--blue); }
+  .title-sub::after  { left:  100%; border-left:  14px solid var(--blue); }
 
-.ns-team {
-  font-size: clamp(80px, 14vw, 160px);
-  font-weight: 900;
-  font-style: italic;
-  line-height: 0.9;
-}
+  /* ── NOW SERVING CARD ── */
+  .now-serving-card {
+    width: 100%; max-width: 700px;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
 
-.ns-status-block {
-  padding: 14px;
-  text-align: center;
-}
+  /* Red bar — larger and pulsing */
+  .ns-red-bar {
+    height: 16px;
+    background: var(--red);
+    animation: redbar-pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes redbar-pulse {
+    0%,100% { background: var(--red); box-shadow: 0 0 0 rgba(204,31,31,0); }
+    50%     { background: #ff3030; box-shadow: 0 0 24px rgba(255,48,48,0.7); }
+  }
 
-.ns-status {
-  font-size: clamp(26px, 4vw, 48px);
-  font-weight: 900;
-}
+  /* White label strip */
+  .ns-label-strip {
+    background: var(--white);
+    padding: 12px 28px 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ns-rule {
+    flex: 1; height: 3px; background: var(--red);
+  }
+  .ns-label {
+    font-weight: 700; font-style: italic;
+    font-size: clamp(13px, 2.5vw, 18px); letter-spacing: 4px;
+    text-transform: uppercase; color: var(--red); white-space: nowrap;
+  }
 
-/* QUEUE */
-.queue-row-name {
-  font-size: clamp(28px, 4vw, 44px);
-}
+  /* Blue team name block */
+  .ns-team-block {
+    background: var(--blue);
+    padding: 22px 28px 26px;
+  }
+  .ns-team {
+    font-weight: 900; font-style: italic;
+    font-size: clamp(56px, 12vw, 120px); text-transform: uppercase;
+    letter-spacing: -2px; line-height: 0.9;
+    color: var(--white);
+    transition: opacity 0.3s;
+    display: block;
+  }
 
-/* FOOTER */
-.footer-text {
-  font-size: clamp(18px, 3vw, 28px);
-  text-align: center;
-  margin-top: 20px;
-  color: var(--gold);
-}
+  /* ── STATUS BADGE — larger, more prominent ── */
+  .ns-status-block {
+    padding: 16px 28px;
+    background: var(--blue);
+    border-top: 1px solid rgba(255,255,255,0.12);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
 
-/* MENU */
-.menu-card {
-  margin-top: 24px;
-}
+  .ns-status-dot {
+    width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+  }
 
-.menu-header {
-  text-align: center;
-  padding: 10px;
-  background: rgba(245,179,27,0.1);
-  border: 2px solid rgba(245,179,27,0.4);
-}
+  .ns-status {
+    font-weight: 900; font-size: clamp(20px, 3.5vw, 32px);
+    letter-spacing: 3px; text-transform: uppercase;
+    font-style: italic;
+  }
 
-.menu-header-label {
-  font-size: clamp(16px, 3vw, 22px);
-  letter-spacing: 4px;
-}
+  /* ON TIME — animated green shimmer */
+  .status-on-time .ns-status-dot  { background: #2ecc71; animation: dot-on-time 1.8s ease-in-out infinite; }
+  .status-on-time .ns-status       { color: #2ecc71; animation: text-on-time 1.8s ease-in-out infinite; }
+  @keyframes dot-on-time {
+    0%,100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.6); }
+    50%     { box-shadow: 0 0 0 8px rgba(46,204,113,0); }
+  }
+  @keyframes text-on-time {
+    0%,100% { opacity: 1; text-shadow: 0 0 0 rgba(46,204,113,0); }
+    50%     { opacity: 0.85; text-shadow: 0 0 20px rgba(46,204,113,0.5); }
+  }
 
-.menu-body {
-  background: rgba(26,58,140,0.85);
-  border: 2px solid rgba(245,179,27,0.35);
-}
+  .status-cooking .ns-status-dot  { background: #f39c12; animation: dot-pulse 1s ease-in-out infinite; }
+  .status-cooking .ns-status       { color: #f39c12; }
 
-.menu-category-row {
-  font-size: clamp(14px, 2.5vw, 18px);
-  color: var(--gold);
-  padding: 6px 16px;
-}
+  .status-waiting .ns-status-dot  { background: #f1c40f; animation: dot-pulse 1.2s ease-in-out infinite; }
+  .status-waiting .ns-status       { color: #f1c40f; }
 
-.menu-item-row {
-  padding: 10px 16px;
-}
+  .status-delayed .ns-status-dot  { background: var(--red); animation: dot-pulse 0.7s ease-in-out infinite; }
+  .status-delayed .ns-status       { color: #ff5555; animation: flash-delayed 0.7s ease-in-out infinite; }
+  @keyframes flash-delayed {
+    0%,100% { opacity: 1; }
+    50%     { opacity: 0.4; }
+  }
 
-.menu-item-name {
-  font-size: clamp(26px, 5vw, 46px);
-}
+  .status-hold .ns-status-dot  { background: #888; }
+  .status-hold .ns-status       { color: #888; }
 
-.menu-item-desc {
-  font-size: 14px;
-  opacity: 0.6;
-}
+  @keyframes dot-pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+    50%     { box-shadow: 0 0 0 8px rgba(255,255,255,0); }
+  }
+
+  /* ── SECTION CARDS ── */
+  .section-card { width: 100%; max-width: 700px; margin-bottom: 14px; }
+
+  .section-header {
+    display: flex; align-items: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1); border-bottom: none;
+    padding: 8px 20px; gap: 10px;
+  }
+  .section-header-label {
+    font-weight: 900; font-style: italic;
+    font-size: clamp(11px, 2vw, 15px); letter-spacing: 4px; text-transform: uppercase;
+  }
+  .section-header-label.up-next  { color: var(--gold); }
+  .section-header-label.later-on { color: var(--red); }
+  .section-header-rule { flex: 1; height: 1px; background: rgba(255,255,255,0.15); }
+
+  .section-body {
+    background: var(--blue); border: 1px solid rgba(255,255,255,0.15); padding: 0;
+  }
+
+  .queue-row {
+    display: flex; align-items: baseline; gap: 16px;
+    padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .queue-row:last-child { border-bottom: none; }
+
+  .queue-row-name {
+    font-weight: 400; font-style: italic;
+    font-size: clamp(22px, 4vw, 38px);
+    text-transform: uppercase; letter-spacing: 0px; color: var(--white);
+  }
+
+  .section-empty {
+    font-weight: 700; font-size: 14px; letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(255,255,255,0.25); text-align: center; padding: 20px;
+  }
+
+  /* ── FOOTER ── */
+  .footer-note {
+    width: 100%; max-width: 700px;
+    display: flex; align-items: center; gap: 16px; margin-top: 10px; padding: 0 4px;
+  }
+  .footer-icon {
+    width: 38px; height: 38px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+  }
+  .footer-text {
+    font-weight: 700; font-style: italic;
+    font-size: clamp(10px, 1.8vw, 14px); text-transform: uppercase;
+    letter-spacing: 1px; color: var(--gold); line-height: 1.4;
+  }
+
+  /* ── HOLD OVERLAY ── */
+  .hold-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.5s;
+  }
+  .hold-overlay.visible { opacity: 1; pointer-events: all; }
+  .hold-overlay-text {
+    font-weight: 900; font-style: italic;
+    font-size: clamp(40px, 10vw, 100px); text-transform: uppercase; letter-spacing: -2px;
+    animation: hpulse 2s ease-in-out infinite;
+  }
+  @keyframes hpulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+  /* ── CINEMATIC OVERLAY ── */
+  .cinematic {
+    position: fixed; inset: 0; background: var(--red);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .cinematic.show { opacity: 1; }
+  .cin-label {
+    font-weight: 700; font-size: clamp(14px, 3vw, 22px); letter-spacing: 6px;
+    text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 12px;
+  }
+  .cin-team {
+    font-weight: 900; font-style: italic;
+    font-size: clamp(50px, 12vw, 120px); text-transform: uppercase;
+    letter-spacing: -2px; line-height: 0.9; text-align: center;
+    text-shadow: 0 4px 0 rgba(0,0,0,0.3);
+  }
 </style>
 </head>
+<body id="screen" class="on-time">
 
-<body>
+<!-- Cinematic flash -->
+<div class="cinematic" id="cinematic">
+  <div class="cin-label">Now Serving</div>
+  <div class="cin-team" id="cin-team">—</div>
+</div>
 
-<div class="title-main">Selection Night Dinner</div>
-<div class="title-sub">Canteen Queue</div>
+<!-- Hold overlay -->
+<div class="hold-overlay" id="holdOverlay">
+  <div class="hold-overlay-text">⏸ On Hold</div>
+</div>
 
+<!-- Title -->
+<div class="title-block">
+  <div class="title-main">Selection Night<br>Dinner</div>
+  <div class="title-sub">Canteen Queue</div>
+</div>
+
+<!-- Now Serving card -->
 <div class="now-serving-card">
   <div class="ns-red-bar"></div>
-  <div class="ns-label-strip">Now Serving</div>
-  <div class="ns-team-block">
-    <div class="ns-team" id="nowTeam">—</div>
+  <div class="ns-label-strip">
+    <div class="ns-rule"></div>
+    <div class="ns-label">Now Serving</div>
+    <div class="ns-rule"></div>
   </div>
-  <div class="ns-status-block">
+  <div class="ns-team-block">
+    <span class="ns-team" id="nowTeam">—</span>
+  </div>
+  <div class="ns-status-block status-on-time" id="statusBlock">
+    <div class="ns-status-dot"></div>
     <div class="ns-status" id="statusText">On Time</div>
   </div>
 </div>
 
-<div class="section-card">
-  <div id="upNextBody"></div>
+<!-- Up Next -->
+<div class="section-card" id="upNextCard">
+  <div class="section-header">
+    <div class="section-header-label up-next">Up Next</div>
+    <div class="section-header-rule"></div>
+  </div>
+  <div class="section-body" id="upNextBody">
+    <div class="section-empty">Nothing queued</div>
+  </div>
 </div>
 
-<!-- FOOTER -->
+<!-- Later On -->
+<div class="section-card" id="laterCard">
+  <div class="section-header">
+    <div class="section-header-label later-on">Later On</div>
+    <div class="section-header-rule"></div>
+  </div>
+  <div class="section-body" id="laterBody">
+    <div class="section-empty">Nothing queued</div>
+  </div>
+</div>
+
+<!-- Footer -->
 <div class="footer-note">
+  <div class="footer-icon">🕐</div>
   <div class="footer-text">
-    If you're here outside your allocated time, please wait until your team is called.
+    If you're here outside of your allocated time, please allow<br>
+    the team with the current slot to be served first.
   </div>
-</div>
-
-<!-- MENU NOW BELOW FOOTER -->
-<div class="menu-card" id="menuCard" style="display:none;">
-  <div class="menu-header">
-    <div class="menu-header-label">Tonight's Menu</div>
-  </div>
-  <div class="menu-body" id="menuBody"></div>
 </div>
 
 <script>
@@ -196,51 +350,86 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 const ref = db.collection("canteen").doc("queue");
+let lastNow = "";
 
-ref.onSnapshot(doc => {
-  const d = doc.data() || {};
-  document.getElementById("nowTeam").textContent = d.now || "—";
-  document.getElementById("statusText").textContent = d.status || "On Time";
+function cinematic(team) {
+  let el = document.getElementById("cinematic");
+  document.getElementById("cin-team").textContent = team;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2200);
+}
 
-  const queue = d.queue || [];
-  const upBody = document.getElementById("upNextBody");
-  upBody.innerHTML = queue.map(t => `<div class="queue-row-name">${t}</div>`).join("");
+function setState(status, mode) {
+  let body = document.getElementById("screen");
+  let block = document.getElementById("statusBlock");
+  let text  = document.getElementById("statusText");
+  body.className = "";
 
-  const menu = d.menu || [];
-  const card = document.getElementById("menuCard");
-  const body = document.getElementById("menuBody");
-
-  if (!menu.length) {
-    card.style.display = "none";
+  if (mode === "hold") {
+    body.classList.add("hold");
+    block.className = "ns-status-block status-hold";
+    text.textContent = "On Hold";
+    document.getElementById("holdOverlay").classList.add("visible");
     return;
   }
 
-  card.style.display = "block";
+  document.getElementById("holdOverlay").classList.remove("visible");
 
-  let html = "";
-  let lastCat = null;
+  let s = status || "";
+  if (s.includes("Cooking")) {
+    body.classList.add("cooking");
+    block.className = "ns-status-block status-cooking";
+    text.textContent = "🔥 Cooking";
+  } else if (s.includes("Waiting")) {
+    body.classList.add("waiting");
+    block.className = "ns-status-block status-waiting";
+    text.textContent = "🍟 Waiting on Chips";
+  } else if (s.includes("Delayed")) {
+    body.classList.add("delayed");
+    block.className = "ns-status-block status-delayed";
+    text.textContent = "⚠️ Delayed";
+  } else {
+    body.classList.add("on-time");
+    block.className = "ns-status-block status-on-time";
+    text.textContent = "✅ On Time";
+  }
+}
 
-  menu.forEach(item => {
-    const name = item.name || item;
-    const desc = item.desc || "";
-    const cat = item.category || "";
+ref.onSnapshot(doc => {
+  let d = doc.data() || {};
+  let queue = d.queue || [];
 
-    if (cat && cat !== lastCat) {
-      html += `<div class="menu-category-row">${cat}</div>`;
-      lastCat = cat;
-    }
+  if (d.now && d.now !== lastNow) {
+    cinematic(d.now);
+    let el = document.getElementById("nowTeam");
+    el.style.opacity = 0;
+    setTimeout(() => { el.textContent = d.now; el.style.opacity = 1; }, 300);
+  } else if (!d.now) {
+    document.getElementById("nowTeam").textContent = "—";
+  }
+  lastNow = d.now;
 
-    html += `
-      <div class="menu-item-row">
-        <div class="menu-item-name">${name}</div>
-        ${desc ? `<div class="menu-item-desc">${desc}</div>` : ""}
-      </div>
-    `;
-  });
+  let upBody = document.getElementById("upNextBody");
+  if (queue.length > 0) {
+    upBody.innerHTML = `<div class="queue-row"><span class="queue-row-name">${queue[0]}</span></div>`;
+    document.getElementById("upNextCard").style.display = "";
+  } else {
+    upBody.innerHTML = `<div class="section-empty">Nothing queued</div>`;
+  }
 
-  body.innerHTML = html;
+  let laterBody = document.getElementById("laterBody");
+  let laterCard = document.getElementById("laterCard");
+  if (queue.length > 1) {
+    laterBody.innerHTML = queue.slice(1).map(t =>
+      `<div class="queue-row"><span class="queue-row-name">${t}</span></div>`
+    ).join("");
+    laterCard.style.display = "";
+  } else {
+    laterCard.style.display = "none";
+  }
+
+  setState(d.status, d.mode);
 });
 </script>
-
 </body>
 </html>
