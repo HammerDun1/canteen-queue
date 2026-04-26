@@ -379,19 +379,19 @@ function setState(status, mode) {
   if (s.includes("Cooking")) {
     body.classList.add("cooking");
     block.className = "ns-status-block status-cooking";
-    text.textContent = "🔥 Cooking";
+    text.textContent = "Cooking";
   } else if (s.includes("Waiting")) {
     body.classList.add("waiting");
     block.className = "ns-status-block status-waiting";
-    text.textContent = "🍟 Waiting on Chips";
+    text.textContent = "Waiting on Chips";
   } else if (s.includes("Delayed")) {
     body.classList.add("delayed");
     block.className = "ns-status-block status-delayed";
-    text.textContent = "⚠️ Delayed";
+    text.textContent = "Delayed";
   } else {
     body.classList.add("on-time");
     block.className = "ns-status-block status-on-time";
-    text.textContent = "✅ On Time";
+    text.textContent = "On Time";
   }
 }
 
